@@ -8,11 +8,11 @@ import SwiftUI
 /// - The list is sorted alphabetically by library name.
 /// - Selecting each library will open a details page where you can view the license body.
 public class LicenseListViewController: UIViewController {
-    /// The style that specifies behavior of license views.
-    public var licenseViewStyle: LicenseViewStyle = .plain
 
     /// Creates a license list view controller.
-    public init() {
+    public init(style: LicenseListViewStyle? = nil, licenseViewStyle: LicenseViewStyle = .plain()) {
+        self.style = style
+        self.licenseViewStyle = licenseViewStyle
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -25,9 +25,13 @@ public class LicenseListViewController: UIViewController {
     /// The view controller embeds ``LicenseListView`` as a child view using UIHostingController.
     public override func viewDidLoad() {
         super.viewDidLoad()
-        let licenseListView = LicenseListView() { [weak self] library in
-            self?.navigateTo(library: library)
-        }
+        let licenseListView = LicenseListView(
+            navigationHandler: { [weak self] library in
+              self?.navigateTo(library: library)
+            },
+            style: style
+        )
+      
         let vc = UIHostingController(rootView: licenseListView)
         self.addChild(vc)
         self.view.addSubview(vc.view)
@@ -37,6 +41,8 @@ public class LicenseListViewController: UIViewController {
         vc.view.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
         vc.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
     }
+  
+    // MARK: - Private
 
     private func navigateTo(library: Library) {
         let hostingController = UIHostingController(
@@ -45,4 +51,10 @@ public class LicenseListViewController: UIViewController {
         hostingController.title = library.name
         self.navigationController?.pushViewController(hostingController, animated: true)
     }
+    
+    /// The style that specifies behavior of license list view.
+    private let style: LicenseListViewStyle?
+    
+    /// The style that specifies behavior of license views.
+    private let licenseViewStyle: LicenseViewStyle
 }
