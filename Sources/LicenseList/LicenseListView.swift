@@ -50,7 +50,9 @@ public struct LicenseListView: View {
                 }
             }
             .listRowBackground(style?.listRowBackground)
+#if os(iOS)
             .listRowSeparatorTint(style?.listRowSeparatorTint)
+#endif
         }
         .background(style?.background)
         .listStyle(.plain)
