@@ -27,16 +27,16 @@ public struct LicenseListView: View {
                             navigationHandler(library)
                         } label: {
                             Text(library.name)
+                              .font(style?.font)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundColor(style?.fontColor)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.subheadline.bold())
+                            .font(style?.font)
                         #if os(iOS)
                             .foregroundColor(Color(.systemGray3))
                         #endif
                     }
-                    .listRowBackground(style?.listRowBackground)
                   
                 } else {
                     NavigationLink {
@@ -44,10 +44,13 @@ public struct LicenseListView: View {
                             .licenseViewStyle(licenseViewStyle)
                     } label: {
                         Text(library.name)
+                          .font(style?.font)
+                          .foregroundColor(style?.fontColor)
                     }
-                    .listRowBackground(style?.listRowBackground)
                 }
             }
+            .listRowBackground(style?.listRowBackground)
+            .listRowSeparatorTint(style?.listRowSeparatorTint)
         }
         .background(style?.background)
         .listStyle(.plain)
@@ -66,10 +69,11 @@ public struct LicenseListView: View {
 #Preview {
     LicenseListView(
         libraries: Array(Library.libraries.prefix(5)),
-        navigationHandler: nil,
+        navigationHandler: { _ in },
         style: .init(
-          background: .cyan,
-          listRowBackground: .blue
+          background: .black,
+          listRowSeparatorTint: .yellow,
+          listRowBackground: .red
         )
     )
 }
