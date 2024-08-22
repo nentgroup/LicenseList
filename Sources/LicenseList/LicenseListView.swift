@@ -49,14 +49,14 @@ public struct LicenseListView: View {
                 }
             }
         }
-        #if os(iOS)
-        .listStyle(.insetGrouped)
-        #endif
+        .background(style?.background)
+        .listStyle(.plain)
     }
   
     // MARK: - Private
   
-    @Environment(\.licenseViewStyle) private var licenseViewStyle: LicenseViewStyle
+    @Environment(\.licenseViewStyle)
+    private var licenseViewStyle: LicenseViewStyle
 
     private var libraries = Library.libraries
     private let navigationHandler: ((Library) -> Void)?
@@ -66,6 +66,10 @@ public struct LicenseListView: View {
 #Preview {
     LicenseListView(
         libraries: Array(Library.libraries.prefix(5)),
-        navigationHandler: nil
+        navigationHandler: nil,
+        style: .init(
+          background: .cyan,
+          listRowBackground: .blue
+        )
     )
 }

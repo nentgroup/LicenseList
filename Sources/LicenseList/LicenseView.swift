@@ -2,12 +2,6 @@ import SwiftUI
 
 /// A view that displays license body.
 public struct LicenseView: View {
-    @State private var attributedLicenseBody = AttributedString(stringLiteral: "")
-
-    @Environment(\.openURL) private var openURL: OpenURLAction
-    @Environment(\.licenseViewStyle) private var licenseViewStyle: LicenseViewStyle
-
-    private let library: Library
 
     /// Creates new license list view with the specified library.
     /// - Parameters:
@@ -35,6 +29,15 @@ public struct LicenseView: View {
         }
         .background(licenseViewStyle.background)
     }
+  
+    // MARK: - Private
+
+    @State private var attributedLicenseBody = AttributedString(stringLiteral: "")
+
+    @Environment(\.openURL) private var openURL: OpenURLAction
+    @Environment(\.licenseViewStyle) private var licenseViewStyle: LicenseViewStyle
+
+    private let library: Library
 
     private func attribute(_ inputText: String) -> AttributedString {
         var attributedText = AttributedString(inputText)

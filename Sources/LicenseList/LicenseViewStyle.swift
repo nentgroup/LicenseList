@@ -7,7 +7,7 @@ public enum LicenseViewStyle: Sendable {
     /// The style used to display the license body and repository anchor link.
     case withRepositoryAnchorLink
   
-  public struct Appearance: Sendable {
+    public struct Appearance: Sendable {
         public init(background: Color? = nil) {
             self.background = background
         }

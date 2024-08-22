@@ -23,6 +23,8 @@ public struct Library: Identifiable, Hashable {
     }
 }
 
+extension Library: Sendable {}
+
 extension Library {
     /// The libraries automatically collected by the internal plug-in.
     public static var libraries: [Library] {
