@@ -2,6 +2,11 @@ import SwiftUI
 
 /// A view that presents license views in a list format.
 public struct LicenseListView: View {
+    @Environment(\.licenseListViewStyle) private var _licenseListViewStyle
+    @Environment(\.licenseViewStyle) private var _licenseViewStyle
+
+    let libraries = Library.libraries
+    let navigationHandler: ((Library) -> Void)?
 
     /// Creates new license list view.
     /// - Parameters:
@@ -19,43 +24,12 @@ public struct LicenseListView: View {
 
     /// The content and behavior of the license list view.
     public var body: some View {
-        List {
-            ForEach(libraries) { library in
-                if let navigationHandler {
-                    HStack {
-                        Button {
-                            navigationHandler(library)
-                        } label: {
-                            Text(library.name)
-                              .font(style?.font)
-                        }
-                        .foregroundColor(style?.fontColor)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(style?.font)
-                        #if os(iOS)
-                            .foregroundColor(Color(.systemGray3))
-                        #endif
-                    }
-                  
-                } else {
-                    NavigationLink {
-                        LicenseView(library: library)
-                            .licenseViewStyle(licenseViewStyle)
-                    } label: {
-                        Text(library.name)
-                          .font(style?.font)
-                          .foregroundColor(style?.fontColor)
-                    }
-                }
-            }
-            .listRowBackground(style?.listRowBackground)
-#if os(iOS)
-            .listRowSeparatorTint(style?.listRowSeparatorTint)
-#endif
-        }
-        .background(style?.background)
-        .listStyle(.plain)
+        AnyView(_licenseListViewStyle.makeBody(configuration: .init(
+            libraries: libraries,
+            navigationHandler: navigationHandler,
+            licenseViewStyle: _licenseViewStyle
+        )))
+        .accessibilityIdentifier("license_list_view")
     }
   
     // MARK: - Private
