@@ -1,21 +1,23 @@
-import XCTest
+import Foundation
+import Testing
 
 #if os(macOS)
-final class SourcePackagesParserTests: XCTestCase {
+struct SourcePackagesParserTests {
     /// Returns path to the built products directory.
-    var productsDirectory: URL {
+    private var productsDirectory: URL {
         for bundle in Bundle.allBundles where bundle.bundlePath.hasSuffix(".xctest") {
             return bundle.bundleURL.deletingLastPathComponent()
         }
         fatalError("couldn't find the products directory")
     }
 
-    func directoryURL(_ key: String) -> URL? {
-        return Bundle.module.resourceURL?.appendingPathComponent(key)
+    private func directoryURL(_ key: String) -> URL? {
+        Bundle.module.resourceURL?.appending(path: key).absoluteURL
     }
 
-    func test_invalid_args() throws {
-        let sppBinary = productsDirectory.appendingPathComponent("spp")
+    @Test("If executed with invalid arguments, the command exits with instructions on how to use it.")
+    func pass_invalid_arguments() throws {
+        let sppBinary = productsDirectory.appending(path: "spp")
         let process = Process()
         process.executableURL = sppBinary
         let pipe = Pipe()
@@ -25,18 +27,22 @@ final class SourcePackagesParserTests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let actual = String(data: data, encoding: .utf8)
 
-        XCTAssertEqual(process.terminationStatus, 1)
         let expect = "USAGE: swift run spp [output directory path] [SourcePackages directory path]\n"
-        XCTAssertEqual(actual, expect)
+        #expect(actual == expect)
+        #expect(process.terminationStatus == 1)
     }
 
-    func test_CouldNotRead_workspace_state_json() throws {
-        let couldNotReadURL = try XCTUnwrap(directoryURL("CouldNotRead"))
+    @Test("If the workspace-state.json is broken, the command exits with error message.")
+    func pass_broken_workspace_state() throws {
+        let couldNotReadURL = try #require(directoryURL("CouldNotRead"))
 
-        let sppBinary = productsDirectory.appendingPathComponent("spp")
+        let sppBinary = productsDirectory.appending(path: "spp")
         let process = Process()
         process.executableURL = sppBinary
-        process.arguments = [couldNotReadURL.path, couldNotReadURL.path]
+        process.arguments = [
+            couldNotReadURL.appending(path: "LicenseList.swift").path(),
+            couldNotReadURL.path()
+        ]
         let pipe = Pipe()
         process.standardOutput = pipe
         try process.run()
@@ -44,18 +50,22 @@ final class SourcePackagesParserTests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let actual = String(data: data, encoding: .utf8)
 
-        XCTAssertEqual(process.terminationStatus, 1)
         let expect = "Error: Could not read workspace-state.json.\n"
-        XCTAssertEqual(actual, expect)
+        #expect(actual == expect)
+        #expect(process.terminationStatus == 1)
     }
 
-    func test_NoLibraries() throws {
-        let noLibrariesURL = try XCTUnwrap(directoryURL("NoLibraries"))
+    @Test("If the workspace-state.json is empty, the command exits with warning message.")
+    func pass_empty_workspace_state() throws {
+        let noLibrariesURL = try #require(directoryURL("Empty"))
 
-        let sppBinary = productsDirectory.appendingPathComponent("spp")
+        let sppBinary = productsDirectory.appending(path: "spp")
         let process = Process()
         process.executableURL = sppBinary
-        process.arguments = [noLibrariesURL.path, noLibrariesURL.path]
+        process.arguments = [
+            noLibrariesURL.appending(path: "LicenseList.swift").path(),
+            noLibrariesURL.path()
+        ]
         let pipe = Pipe()
         process.standardOutput = pipe
         try process.run()
@@ -63,22 +73,29 @@ final class SourcePackagesParserTests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let actual = String(data: data, encoding: .utf8)
 
-        XCTAssertEqual(process.terminationStatus, 0)
         let expect = "Warning: No libraries.\n"
-        XCTAssertEqual(actual, expect)
+        #expect(actual == expect)
+        #expect(process.terminationStatus == 0)
     }
 
-    func xtest_CouldNotExportLicenseList() throws {
-        // It is not possible to intentionally reproduce this error.
-    }
+    @Test(
+        "If the file exporting fails, the command exits with error message.",
+        .disabled("It is not possible to intentionally reproduce this error.")
+    )
+    func failed_to_export_license_list() {}
 
-    func test_SourcePackagesParser_run() throws {
-        let sourcePackagesURL = try XCTUnwrap(directoryURL("SourcePackages"))
+    @Test("If the workspace-state.json is full, the command exits normally.")
+    func run() throws {
+        let sourcePackagesURL = try #require(directoryURL("SourcePackages"))
+        let licenseListURL = sourcePackagesURL.appending(path: "LicenseList.swift")
 
-        let sppBinary = productsDirectory.appendingPathComponent("spp")
+        let sppBinary = productsDirectory.appending(path: "spp")
         let process = Process()
         process.executableURL = sppBinary
-        process.arguments = [sourcePackagesURL.path, sourcePackagesURL.path]
+        process.arguments = [
+            licenseListURL.path(),
+            sourcePackagesURL.path()
+        ]
         let pipe = Pipe()
         process.standardOutput = pipe
         try process.run()
@@ -86,35 +103,29 @@ final class SourcePackagesParserTests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let actual = String(data: data, encoding: .utf8)
 
-        XCTAssertEqual(process.terminationStatus, 0)
-        let expect = """
-        Package-A
-        Package-B
-        Package-C
-        Package-D
-        Package-E
+        #expect(process.terminationStatus == 0)
 
-        """
-        XCTAssertEqual(actual, expect)
+        let ids = ["A", "B", "C", "D", "E"]
+        let expect = ids.map { "Package-\($0)" }.joined(separator: "\n") + "\n"
+        #expect(actual == expect)
 
-        let licenseListURL = sourcePackagesURL.appendingPathComponent("LicenseList.swift")
-        let text = try XCTUnwrap(String(contentsOf: licenseListURL))
+        let text = try String(contentsOf: licenseListURL)
         let names = text.components(separatedBy: .newlines)
             .filter { $0.contains(#""name":"#) }
             .compactMap { $0.split(separator: ": ").last }
 
-        XCTAssertEqual(names.count, 5)
-        ["A", "B", "C", "D", "E"].enumerated().forEach { (index, key) in
-            XCTAssertTrue(names[index].hasSuffix("\"Package-\(key)\","))
+        #expect(names.count == 5)
+        ids.enumerated().forEach { index, key in
+            #expect(names[index].hasSuffix("\"Package-\(key)\","))
         }
 
         let urls = text.components(separatedBy: .newlines)
             .filter { $0.contains(#""url":"#) }
             .compactMap { $0.split(separator: ": ").last }
 
-        XCTAssertEqual(urls.count, 5)
-        ["A", "B", "C", "D", "E"].enumerated().forEach { (index, key) in
-            XCTAssertTrue(urls[index].hasSuffix("\"https://github.com/dummy/Package-\(key).git\","))
+        #expect(urls.count == 5)
+        ids.enumerated().forEach { index, key in
+            #expect(urls[index].hasSuffix("\"https://github.com/dummy/Package-\(key).git\","))
         }
     }
 }

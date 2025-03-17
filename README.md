@@ -5,12 +5,11 @@
 
 Generate a list of licenses for the Swift Package libraries that your app depends on.
 
-[![Github issues](https://img.shields.io/github/issues/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/issues)
 [![Github forks](https://img.shields.io/github/forks/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/network/members)
 [![Github stars](https://img.shields.io/github/stars/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/stargazers)
-[![Top language](https://img.shields.io/github/languages/top/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/)
-[![Release](https://img.shields.io/github/v/release/cybozu/LicenseList)]()
-[![Github license](https://img.shields.io/github/license/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/)
+[![Github issues](https://img.shields.io/github/issues/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/issues)
+[![Github release](https://img.shields.io/github/v/release/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/releases)
+[![Github license](https://img.shields.io/github/license/cybozu/LicenseList)](https://github.com/cybozu/LicenseList/blob/main/LICENSE)
 
 **Example**
 
@@ -24,9 +23,9 @@ Generate a list of licenses for the Swift Package libraries that your app depend
 
 ## Requirements
 
-- Development with Xcode 15.4+
-- Written in Swift 5.9
-- Compatible with iOS 15.0+, tvOS 17.0+
+- Development with Xcode 16.2+
+- Written in Swift 6.0
+- Compatible with iOS 16.0+, tvOS 17.0+
 
 ## Documentation
 
@@ -53,7 +52,7 @@ LicenseList is available through [Swift Package Manager](https://github.com/appl
 1. Create `Package.swift` that describes dependencies.
 
    ```swift
-   // swift-tools-version: 5.9
+   // swift-tools-version: 6.0
    import PackageDescription
 
    let package = Package(
@@ -62,7 +61,7 @@ LicenseList is available through [Swift Package Manager](https://github.com/appl
            .library(name: "SomeProduct", targets: ["SomeProduct"])
        ],
        dependencies: [
-           .package(url: "https://github.com/cybozu/LicenseList.git", exact: "1.0.0")
+           .package(url: "https://github.com/cybozu/LicenseList.git", exact: "2.0.0")
        ],
        targets: [
            .target(

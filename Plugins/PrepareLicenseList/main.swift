@@ -7,38 +7,48 @@ struct PrepareLicenseList: BuildToolPlugin {
         let description: String = "SourcePackages not found"
     }
 
-    func sourcePackages(_ pluginWorkDirectory: Path) throws -> Path {
-        var tmpPath = pluginWorkDirectory
-        guard pluginWorkDirectory.string.contains("SourcePackages") else {
+    func existsSourcePackages(in url: URL) throws -> Bool {
+        guard url.isFileURL,
+              url.pathComponents.count > 1,
+              let isDirectory = try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory else {
             throw SourcePackagesNotFoundError()
         }
-        while tmpPath.lastComponent != "SourcePackages" {
-            tmpPath = tmpPath.removingLastComponent()
-        }
-        return tmpPath
+        let existsSourcePackagesInDirectory = FileManager.default
+            .fileExists(atPath: url.appending(path: "SourcePackages").path())
+        return isDirectory && existsSourcePackagesInDirectory
     }
 
-    func makeBuildCommand(executablePath: Path, sourcePackagesPath: Path, outputPath: Path) -> Command {
-        return .buildCommand(
+    func sourcePackages(_ pluginWorkDirectory: URL) throws -> URL {
+        var tmpURL = pluginWorkDirectory.absoluteURL
+
+        while try !existsSourcePackages(in: tmpURL) {
+            tmpURL.deleteLastPathComponent()
+        }
+        tmpURL.append(path: "SourcePackages")
+        return tmpURL
+    }
+
+    func makeBuildCommand(executableURL: URL, sourcePackagesURL: URL, outputURL: URL) -> Command {
+        .buildCommand(
             displayName: "Prepare LicenseList",
-            executable: executablePath,
+            executable: executableURL,
             arguments: [
-                outputPath.string,
-                sourcePackagesPath.string
+                outputURL.absoluteURL.path(),
+                sourcePackagesURL.absoluteURL.path(),
             ],
             outputFiles: [
-                outputPath.appending(["LicenseList.swift"])
+                outputURL
             ]
         )
     }
 
     // This command works with the plugin specified in `Package.swift`.
     func createBuildCommands(context: PluginContext, target: Target) async throws -> [Command] {
-        return [
+        [
             makeBuildCommand(
-                executablePath: try context.tool(named: "spp").path,
-                sourcePackagesPath: try sourcePackages(context.pluginWorkDirectory),
-                outputPath: context.pluginWorkDirectory
+                executableURL: try context.tool(named: "spp").url,
+                sourcePackagesURL: try sourcePackages(context.pluginWorkDirectoryURL),
+                outputURL: context.pluginWorkDirectoryURL.appending(path: "LicenseList.swift")
             )
         ]
     }

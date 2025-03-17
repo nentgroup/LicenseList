@@ -13,10 +13,10 @@ concurrency:
 jobs:
   run-unit-test:
     name: Unit Test
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
     env:
-      DEVELOPER_DIR: "/Applications/Xcode_15.4.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode_16.2.app/Contents/Developer"
 
     steps:
       - name: Checkout
@@ -27,15 +27,10 @@ jobs:
 
       - name: Run SourcePackagesParserTests
         run: |
-          xcodebuild -scheme spp test \
+          xcodebuild test \
+            -project Examples/Examples.xcodeproj \
+            -scheme SourcePackagesParserTests \
             -only-testing:SourcePackagesParserTests \
             -destination "platform=macOS,arch=arm64" \
             -resultBundlePath TestResults/result_bundle | \
-            xcpretty -c && exit ${PIPESTATUS[0]}
-
-      - name: Archive test results
-        if: success() || failure()
-        uses: kishikawakatsumi/xcresulttool@v1
-        with:
-          path: TestResults/result_bundle.xcresult
-          show-passed-tests: false
+            xcbeautify && exit ${PIPESTATUS[0]}
