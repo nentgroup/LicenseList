@@ -139,10 +139,17 @@ private struct DummyFocusButtonStyle: ButtonStyle {
     let font: Font
 
     func makeBody(configuration: Configuration) -> some View {
+      if #available(tvOS 18.0, *) {
         Text(text)
-            .font(font)
-            .hoverEffect()
-            .opacity(0)
+          .font(font)
+          .hoverEffect()
+          .opacity(0)
+      } else {
+        // Fallback on earlier versions
+        Text(text)
+          .font(font)
+          .opacity(0)
+      }
     }
 }
 
