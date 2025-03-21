@@ -13,6 +13,9 @@ public struct LicenseView: View {
     /// The content and behavior of the license view.
     public var body: some View {
         ScrollView {
+#if os(tvOS)
+            Color.clear.focusable(true)
+#endif
             Text(attributedLicenseBody)
                 .font(.caption)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -20,6 +23,9 @@ public struct LicenseView: View {
                 .onAppear {
                     attributedLicenseBody = attribute(library.licenseBody)
                 }
+#if os(tvOS)
+            Color.clear.focusable(true)
+#endif
         }
         .navigationBarTitle(library.name)
         ._licenseViewStyle(licenseViewStyle) {
