@@ -19,6 +19,9 @@ public struct LicenseView: View {
             Text(attributedLicenseBody)
                 .font(.caption)
                 .frame(maxWidth: .infinity, alignment: .leading)
+#if os(tvOS)
+                .focusable(true)
+#endif
                 .padding()
                 .onAppear {
                     attributedLicenseBody = attribute(library.licenseBody)
