@@ -3,31 +3,34 @@ import PackagePlugin
 
 @main
 struct PrepareLicenseList: BuildToolPlugin {
-    struct SourcePackagesNotFoundError: Error & CustomStringConvertible {
-        let description: String = "SourcePackages not found"
+    struct DerivedDataNotFoundError: Error & CustomStringConvertible {
+      let description: String = "DerivedData not found"
     }
 
-    func sourcePackages(_ pluginWorkDirectory: Path) throws -> Path {
+    func sourcePackages(_ pluginWorkDirectory: URL) throws -> URL {
+        guard pluginWorkDirectory.pathComponents.contains("DerivedData") else {
+          throw DerivedDataNotFoundError()
+        }
+      
+      
         var tmpPath = pluginWorkDirectory
-        guard pluginWorkDirectory.string.contains("SourcePackages") else {
-            throw SourcePackagesNotFoundError()
+        while tmpPath.deletingLastPathComponent().lastPathComponent != "DerivedData" {
+          tmpPath.deleteLastPathComponent()
         }
-        while tmpPath.lastComponent != "SourcePackages" {
-            tmpPath = tmpPath.removingLastComponent()
-        }
+        tmpPath.append(path: "SourcePackages")
         return tmpPath
     }
 
-    func makeBuildCommand(executablePath: Path, sourcePackagesPath: Path, outputPath: Path) -> Command {
+    func makeBuildCommand(executableURL: URL, sourcePackagesURL: URL, outputURL: URL) -> Command {
         return .buildCommand(
             displayName: "Prepare LicenseList",
-            executable: executablePath,
+            executable: executableURL,
             arguments: [
-                outputPath.string,
-                sourcePackagesPath.string
+                outputURL.absoluteURL.path(),
+                sourcePackagesURL.absoluteURL.path()
             ],
             outputFiles: [
-                outputPath.appending(["LicenseList.swift"])
+                outputURL
             ]
         )
     }
@@ -36,9 +39,9 @@ struct PrepareLicenseList: BuildToolPlugin {
     func createBuildCommands(context: PluginContext, target: Target) async throws -> [Command] {
         return [
             makeBuildCommand(
-                executablePath: try context.tool(named: "spp").path,
-                sourcePackagesPath: try sourcePackages(context.pluginWorkDirectory),
-                outputPath: context.pluginWorkDirectory
+                executableURL: try context.tool(named: "spp").url,
+                sourcePackagesURL: try sourcePackages(context.pluginWorkDirectoryURL),
+                outputURL: context.pluginWorkDirectoryURL.appending(path: "LicenseList.swift")
             )
         ]
     }
