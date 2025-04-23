@@ -39,7 +39,6 @@ final class SourcePackagesParser {
 
         // Export LicenseList.swift
         let saveURL = URL(fileURLWithPath: outputPath)
-            .appendingPathComponent("LicenseList.swift")
         try exportLicenseList(libraries, to: saveURL)
     }
 
